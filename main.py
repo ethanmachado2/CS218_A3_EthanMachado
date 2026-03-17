@@ -2,11 +2,16 @@ import datetime as dt
 import uuid
 import hashlib
 import json
+import os
+import sys
+import psycopg2
+import time
 from flask import Flask, jsonify, request, make_response, g
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, UniqueConstraint
+from flask_migrate import Migrate
+from sqlalchemy import ForeignKey, UniqueConstraint, text
 from sqlalchemy.orm import relationship
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from marshmallow import Schema, fields, validate, ValidationError
 
 app = Flask(__name__)
@@ -47,11 +52,24 @@ def canonical_json_bytes(payload: dict) -> bytes:
 def sha256_hex(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
-# database creation
+# database creation - old configuration using sqlite
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ordersmgmt.db"
+# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ordersmgmt.db"
+
+# db = SQLAlchemy(app)
+
+# database creation using Postgres
+
+DB_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/dbname")
+app.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
 
 db = SQLAlchemy(app)
+
+# db migrations provided
+
+migrate = Migrate(app, db)
 
 # orders database table model creation
 
@@ -64,6 +82,7 @@ class Orders(db.Model):
     quantity = db.Column(db.Integer, nullable = False)
     created = db.Column(db.DateTime, nullable = False, default = utcnow)
     updated = db.Column(db.DateTime, nullable = False, default = utcnow, onupdate = utcnow)
+    # notes = db.Column(db.String(255), nullable=True)
     ledger_entries = relationship("Ledger", back_populates="order", cascade="all, delete-orphan")
 
 # function to return a record from the orders table as a dictionary for future use
@@ -125,10 +144,30 @@ class Idempotency(db.Model):
     #         "timestamp" : self.timestamp
     #     }
 
-# creation of database instance
+# need to create externalized Postgres DB
+
+# with app.app_context():
+#     db.create_all()
+
+# updated ping with retries to check if db is available
 
 with app.app_context():
-    db.create_all()
+    retries = 5
+    while retries > 0:
+        try:
+            # simple select statement to check if db is available
+            db.session.execute(text('SELECT 1'))
+            struct_log("INFO_LOG", "Database connection verified.")
+            break
+        except Exception as e:
+            # retry logic to check if db is available
+            retries -= 1
+            struct_log("WARNING_LOG", f"DB not ready, retrying... ({retries} left)", {"error": str(e)})
+            time.sleep(2)
+    if retries == 0:
+        # failure condition if db is unavailable after retries
+        struct_log("ERROR_LOG", "Could not connect to database after retries.")
+        sys.exit(1)
 
 # creation of a client request schema for request body validation
 
@@ -268,15 +307,25 @@ def orders_route():
 
 # simple GET order endpoint that is searchable via {order_id}.
 # return 404 not found status code if {order_id} is not maintained in orders table
-@app.route("/orders/<id>", methods = ["GET"])
+@app.route("/orders/<int:id>", methods = ["GET"])
 def get_order(id):
-        order = Orders.query.get(id)
+        order = db.session.get(Orders, id)
         if order:
             struct_log("INFO_LOG", "Order retrieved successfully", {"order_id" : order.order_id})
             return jsonify({"order_id" : order.order_id, "customer_id" : order.customer_id, "item_id" : order.item_id, "quantity" : order.quantity})
         struct_log("WARNING_LOG", "Order not found", {"status code" : 404})
         return (jsonify({"Error" : "Order not found"}), 404)
 
+
+# simple GET health endpoint that checks the health of the backend Postgres db
+@app.route("/health", methods = ["GET"])
+def health():
+    try:
+        db.session.execute(text("SELECT 1"))
+        return (jsonify({"status:" : "ok", "db" : "connected"}), 200)
+    except Exception as e:
+        struct_log("ERROR_LOG", "Health Check Failed", {"Error" : str(e)})
+        return (jsonify({"status" : "error", "db" : "disconnected"}), 503)
 
 if __name__ == "__main__":
     app.run(debug = True)

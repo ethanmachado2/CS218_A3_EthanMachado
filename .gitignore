@@ -1,0 +1,12 @@
+# secrets files
+.env
+
+# python related files
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# IDE related files
+.vscode/
+.idea/
