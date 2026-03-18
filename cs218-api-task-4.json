@@ -1,0 +1,259 @@
+{ 
+
+    "taskDefinitionArn": "arn:aws:ecs:us-east-2:554598304668:task-definition/cs218-api-task:4", 
+
+    "containerDefinitions": [ 
+
+        { 
+
+            "name": "api-container", 
+
+            "image": "554598304668.dkr.ecr.us-east-2.amazonaws.com/cs218-api:latest", 
+
+            "cpu": 0, 
+
+            "portMappings": [ 
+
+                { 
+
+                    "name": "api-container-8080-tcp", 
+
+                    "containerPort": 8080, 
+
+                    "hostPort": 8080, 
+
+                    "protocol": "tcp", 
+
+                    "appProtocol": "http" 
+
+                } 
+
+            ], 
+
+            "essential": true, 
+
+            "environment": [ 
+
+                { 
+
+                    "name": "FLASK_APP", 
+
+                    "value": "main.py" 
+
+                }, 
+
+                { 
+
+                    "name": "FLASK_DEBUG", 
+
+                    "value": "0" 
+
+                }, 
+
+                { 
+
+                    "name": "PYTHONPATH", 
+
+                    "value": "." 
+
+                }, 
+
+                { 
+
+                    "name": "PYTHONUNBUFFERED", 
+
+                    "value": "1" 
+
+                } 
+
+            ], 
+
+            "environmentFiles": [], 
+
+            "mountPoints": [], 
+
+            "volumesFrom": [], 
+
+            "secrets": [ 
+
+                { 
+
+                    "name": "DATABASE_URL", 
+
+                    "valueFrom": "arn:aws:ssm:us-east-2:554598304668:parameter/cs218/prod/database_url" 
+
+                } 
+
+            ], 
+
+            "ulimits": [], 
+
+            "logConfiguration": { 
+
+                "logDriver": "awslogs", 
+
+                "options": { 
+
+                    "awslogs-group": "/ecs/cs218-api-task", 
+
+                    "awslogs-create-group": "true", 
+
+                    "awslogs-region": "us-east-2", 
+
+                    "awslogs-stream-prefix": "ecs" 
+
+                }, 
+
+                "secretOptions": [] 
+
+            }, 
+
+            "healthCheck": { 
+
+                "command": [ 
+
+                    "CMD-SHELL", 
+
+                    "curl -f http://localhost:8080/health || exit 1" 
+
+                ], 
+
+                "interval": 30, 
+
+                "timeout": 5, 
+
+                "retries": 3, 
+
+                "startPeriod": 60 
+
+            }, 
+
+            "systemControls": [] 
+
+        } 
+
+    ], 
+
+    "family": "cs218-api-task", 
+
+    "taskRoleArn": "arn:aws:iam::554598304668:role/cs218-task-exe-role", 
+
+    "executionRoleArn": "arn:aws:iam::554598304668:role/cs218-task-exe-role", 
+
+    "networkMode": "awsvpc", 
+
+    "revision": 4, 
+
+    "volumes": [], 
+
+    "status": "ACTIVE", 
+
+    "requiresAttributes": [ 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs" 
+
+        }, 
+
+        { 
+
+            "name": "ecs.capability.execution-role-awslogs" 
+
+        }, 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.ecr-auth" 
+
+        }, 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19" 
+
+        }, 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.task-iam-role" 
+
+        }, 
+
+        { 
+
+            "name": "ecs.capability.container-health-check" 
+
+        }, 
+
+        { 
+
+            "name": "ecs.capability.execution-role-ecr-pull" 
+
+        }, 
+
+        { 
+
+            "name": "ecs.capability.secrets.ssm.environment-variables" 
+
+        }, 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18" 
+
+        }, 
+
+        { 
+
+            "name": "ecs.capability.task-eni" 
+
+        }, 
+
+        { 
+
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29" 
+
+        } 
+
+    ], 
+
+    "placementConstraints": [], 
+
+    "compatibilities": [ 
+
+        "EC2", 
+
+        "MANAGED_INSTANCES", 
+
+        "FARGATE" 
+
+    ], 
+
+    "requiresCompatibilities": [ 
+
+        "FARGATE" 
+
+    ], 
+
+    "cpu": "512", 
+
+    "memory": "2048", 
+
+    "runtimePlatform": { 
+
+        "cpuArchitecture": "ARM64", 
+
+        "operatingSystemFamily": "LINUX" 
+
+    }, 
+
+    "registeredAt": "2026-03-18T04:10:06.071Z", 
+
+    "registeredBy": "arn:aws:iam::554598304668:root", 
+
+    "enableFaultInjection": false, 
+
+    "tags": [] 
+
+}
