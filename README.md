@@ -20,6 +20,8 @@ Local setup steps:
 
 Steps to execute local load test via Locust:
 
+Configuration: 50 peak concurrent users; 5 users spawned per second; total runtime of 1 minute.
+
 1. Execute the following command to run the load test directly in the terminal: "locust --headless --users 50 --spawn-rate 5 --run-time 1m --host http://localhost:8080"
 
 Locust test summary:
