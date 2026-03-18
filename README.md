@@ -18,6 +18,10 @@ Local setup steps:
 11. To restart the postgres container service, use the following command: "docker-compose restart postgres".
 12. To confirm postgres volume persistence, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
 
+Steps to execute local load test via Locust:
+
+1. Execute the following command to run the load test directly in the terminal: "locust --headless --users 50 --spawn-rate 5 --run-time 1m --host http://localhost:8080"
+
 Locust test summary:
 
 Configuration:
@@ -108,3 +112,26 @@ Security group to allow ECS API traffic to hit the RDS DB: rds-sg
 9. Use the following command to check if the infrastructure is properly configured: "curl http://ALB-DNS/health". If the infrastructure is configured properly, then you should receive the following response: "{"db":"connected","status:":"ok"}".
 
 <img width="580" height="103" alt="image" src="https://github.com/user-attachments/assets/598c611e-74c9-4429-88b1-28fe4e2e5996" />
+
+Local demo video commands:
+
+docker-compose up -d --build
+docker-compose logs -f api
+curl -i http://localhost:8080/health
+curl -s -X POST http://localhost:8080/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-901" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}
+docker-compose restart api
+curl -s http://localhost:8080/orders/{order_ID}
+docker-compose restart postgres
+curl -s http://localhost:8080/orders/{order_ID}
+
+AWS demo video commands:
+
+curl -i http://cs218-api-alb-646691289.us-east-2.elb.amazonaws.com/health
+curl -s X POST http://cs218-api-alb-646691289.us-east-2.elb.amazonaws.com/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-900" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}'
+curl -s http://cs218-api-alb-646691289.us-east-2.elb.amazonaws.com/orders/{order_id}
+
+RDS demo video queries:
+
+SELECT * FROM orders;
+SELECT * FROM idempotency_records;
+SELECT * FROM ledger;
