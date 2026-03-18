@@ -12,7 +12,7 @@ Local setup steps:
 5. To perform a health check, use the following command: "curl -i http://localhost:8080/health".
 6. Database migrations are handled via the entrypoint.sh file. The command "flask db upgrade" is executed in the entrypoint.sh script.
 7. Note: To perform a manual database migration, use the following commands: "docker-compose run --rm api flask db init \ docker-compose run --rm api flask db migrate -m "your_migration_message" \ docker-compose run --rm api flask db upgrade".
-8. Create an order using the following curl command: curl http://localhost:8080/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-001" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}'.
+8. Create an order using the following curl command: curl -s -X POST http://localhost:8080/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-001" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}'.
 9. To restart the api container service, use the following command: "docker-compose restart api".
 10. To confirm persistence across an API restart, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
 11. To restart the postgres container service, use the following command: "docker-compose restart postgres".
