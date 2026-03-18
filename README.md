@@ -20,9 +20,9 @@ Locust test summary:
 
 Configuration:
 
-Number of users: 50
-Ramp up (users/second): 5
-Host: http://localhost:8080
+Number of users: 50;
+Ramp up (users/second): 5;
+Host: http://localhost:8080;
 Run time: 2 minutes
 
 <img width="1214" height="765" alt="image" src="https://github.com/user-attachments/assets/18885d2a-8df8-40a5-8b1a-3529c490c7d5" />
@@ -35,6 +35,6 @@ Locust results: 33.2 RPS, 22 P95 (ms), 46 P99 (ms)
 
 <img width="1213" height="387" alt="image" src="https://github.com/user-attachments/assets/c49d83ce-1db8-4d49-9cbe-394e154b5959" />
 
-Brief analysis of Locust results: The two initial failures occurred due to no {order_id} being found in the orders DB table. This is correct behavior because the test script stores created orders in a list. At the beginning of the stress test, no orders are created. Thus, a particular request can return a 404 code. Overall, the application exhibited strong stability with only 2 errors out of 3871 requests. In terms of performance, the application exhibited solid metrics. The P95 and P99 metrics were both under 50 ms in the aggregate. Thus, the application exhibits good scalability under load.
+Brief analysis of Locust results: The two initial failures occurred due to no {order_id} being found in the orders DB table. This is correct behavior because the test script stores created orders in a list. At the beginning of the stress test, no orders are created. Thus, a particular request can return a 404 code. Overall, the application exhibited strong stability with only 2 errors out of 3871 requests. In terms of performance, the application exhibited solid metrics. The P95 and P99 metrics were both under 50 ms in the aggregate. Thus, the application exhibits good scalability under load. Peak latency experienced could be attributed to the small Task size used (0.5 vCPU and 2GiB memory) and the small RDS Class used (db.t4g.micro).
 
 Steps to deploy to AWS:
