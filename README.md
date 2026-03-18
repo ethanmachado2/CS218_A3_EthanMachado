@@ -62,3 +62,49 @@ ALB target group health check configuration: The ALB Target Group health check m
 Secrets injection: The "database_url" and the "db_password" variables are stored via AWS SSM Parameter Store and referenced by the container at runtime. Both variables are stored as a SecureString for security. The database host, user, password, and dbname are environment driven - as directed in the assignment instructions. 
 
 <img width="1917" height="547" alt="image" src="https://github.com/user-attachments/assets/6efae1ea-97d3-4c00-9f78-56961764e355" />
+
+AWS deployment steps:
+
+#1) Create and push the container image to AWS ECR.
+
+1. Enter the following command to authenticate local Docker to AWS ECR.
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com
+
+2. Enter the following command to build the container image named "cs218-api" to store in ECR.
+docker build --platform linux/arm64 -t cs218-api .
+
+3. Enter the following command to tag the container image with the latest tag.
+docker tag cs218-api:latest <AWS_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/cs218-api:latest
+
+4. Enter the following command to push the container image to AWS ECR.
+docker push <AWS_ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/cs218-api:latest
+
+#2) Create the necessary infrastructure in AWS.
+
+1. Create the following security groups.
+
+Security group to allow all public inbound traffic to hit the ALB: alb-sg
+
+<img width="1647" height="240" alt="image" src="https://github.com/user-attachments/assets/987ade5f-fead-49ac-8aae-49330f224d41" />
+
+Security group to allow ALB traffic to hit the ECS API: ecs-api-sg
+
+<img width="1654" height="170" alt="image" src="https://github.com/user-attachments/assets/f370e84c-9fc9-47a8-b136-cd5d92d0a121" />
+
+Security group to allow ECS API traffic to hit the RDS DB: rds-sg
+
+<img width="1650" height="245" alt="image" src="https://github.com/user-attachments/assets/a5801313-e93a-4635-a07a-2dabf0040d82" />
+
+2. Create an AWS RDS database with public access enabled. Use password authentication. Save password for SSM Parameter Store. Add the "rds-sg" security group.
+3. Create an AWS Target Group. Protocol/Port: HTTP/8080. Add health check that references "/health" endpoint.
+4. Create an AWS ALB. Listener: HTTP/80. Add the "alb-sg" security group. Default action: Forward to AWS target group created in step #3.
+5. Create two parameters using SSM Parameter Store: "db_password" (database password generated when creating AWS RDS in step #2) and "database_url" (database URL constructed from RDS secrets. ex: postgresql://postgres:mypassword123@://mydbinstance.123456789012.us-east-1.rds.amazonaws.com).
+6. Create an IAM role that includes the following policies: AmazonECSTaskExecutionRolePolicy and AmazonSSMReadOnlyAccess. These policies give the eventual ECS task the ability to communicate with ECR to get the container image and SSM to get the secrets.
+7. Create a new ECS Task Definition. Launch type = AWS Fargate. OS/Architecture = Linux/ARM64. Task Role and Excecution Role = IAM role created in step #6. Image URI = ECR Image URI with the :latest tag pushed in section #1. Port mappings: HTTP/8080. Set environment variables as follows: DATABASE_URL (valueFrom) = "database_url" secret created in step #5. FLASK_APP = main.py. FLASK_DEBUG = 0. PYTHONPATH = ".". PYTHONUNBUFFERED = 1.
+
+<img width="1575" height="520" alt="image" src="https://github.com/user-attachments/assets/cc955372-555b-4c0d-a9a0-0b10b7c88d4d" />
+
+8. Create a new ECS Cluster. Deployment configuration = ECS Task Definition created in step #7. Desired tasks = 1. Networking = Default VPC & "ecs-api-sg" security group. Load Balancing = ALB created in step #4 and Target Group created in step #3.
+9. Use the following command to check if the infrastructure is properly configured: "curl http://ALB-DNS/health". If the infrastructure is configured properly, then you should receive the following response: "{"db":"connected","status:":"ok"}".
+
+<img width="580" height="103" alt="image" src="https://github.com/user-attachments/assets/598c611e-74c9-4429-88b1-28fe4e2e5996" />
