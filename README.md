@@ -9,12 +9,13 @@ Local setup steps:
 2. Execute the following command to build and start the api and postgres containers: "docker-compose up -d --build".
 3. Execute the following command to display all logs generated while the containers are running: "docker-compose logs -f api".
 4. To perform a health check, use the following command: "curl -i http://localhost:8080/health".
-5. To perform a database migration, use the following commands: "docker-compose run --rm api flask db init \ docker-compose run --rm api flask db migrate -m "your_migration_message" \ docker-compose run --rm api flask db upgrade".
-6. Create an order using the following curl command: curl http://localhost:8080/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-001" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}'.
-7. To restart the api container service, use the following command: "docker-compose restart api".
-8. To confirm persistence across an API restart, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
-9. To restart the postgres container service, use the following command: "docker-compose restart postgres".
-10. To confirm postgres volume persistence, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
+5. Database migrations are handled via the entrypoint.sh file. The command "flask db upgrade" is executed in the entrypoint.sh script.
+6. Note: To perform a manual database migration, use the following commands: "docker-compose run --rm api flask db init \ docker-compose run --rm api flask db migrate -m "your_migration_message" \ docker-compose run --rm api flask db upgrade".
+7. Create an order using the following curl command: curl http://localhost:8080/orders -H "Content-Type:application/json" -H "Idempotency-Key:test-001" -d '{"customer_id":"cust1","item_id":"item1","quantity":1}'.
+8. To restart the api container service, use the following command: "docker-compose restart api".
+9. To confirm persistence across an API restart, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
+10. To restart the postgres container service, use the following command: "docker-compose restart postgres".
+11. To confirm postgres volume persistence, use the following command: "curl -s http://localhost:8080/orders/{order_id}".
 
 Locust test summary:
 
