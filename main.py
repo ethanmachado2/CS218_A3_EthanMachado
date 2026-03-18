@@ -60,7 +60,19 @@ def sha256_hex(b: bytes) -> str:
 
 # database creation using Postgres
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/dbname")
+# DB_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/dbname")
+
+DB_URL = os.getenv("DATABASE_URL")
+
+if not DB_URL:
+    # force system exit if DATABASE_URL env-driven variables are not set
+    print(json.dumps({
+        "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "type": "ERROR_LOG",
+        "message": "CRITICAL: DATABASE_URL environment variable is not set. Service exiting."
+    }))
+    sys.exit(1)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}

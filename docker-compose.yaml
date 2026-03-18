@@ -25,10 +25,17 @@ services:
     build: . 
     ports: 
       - "8080:8080" 
-    volumes:
-      - .:/app
+    # volumes:
+    #  - .:/app
     environment: 
-      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-ordersmgmt}
+    # fix to ensure that db host/user/password/dbname are env-driven
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USER=${DB_USER:-user}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-ordersmgmt}
+      # Constructing the URL using the env-driven values
+      - DATABASE_URL=postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-ordersmgmt}
       - FLASK_APP=main.py
       - PYTHONUNBUFFERED=1
     depends_on: 
