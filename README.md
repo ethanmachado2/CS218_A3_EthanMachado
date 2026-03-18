@@ -41,6 +41,16 @@ Brief analysis of Locust results: The two initial failures occurred due to no {o
 
 AWS configuration details:
 
+Public ALB URL: http://cs218-api-alb-646691289.us-east-2.elb.amazonaws.com
+
+ECS service name: cs218-api-task-service-ui57wf0n
+
+Database type used: AWS RDS - PostgreSQL
+
+RDS Instance class/type: db.t4g.micro
+
+ECS Fargate Instance type: 0.5 vCPU and 2GiB memory
+
 ECS task definition added to repository as "cs218-api-task-4.json".
 
 ALB target group health check configuration: The ALB Target Group health check monitors the /health endpoint. An additional container health check is configured.
