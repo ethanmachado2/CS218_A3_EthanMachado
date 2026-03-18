@@ -39,4 +39,16 @@ Locust results: 33.2 RPS, 22 P95 (ms), 46 P99 (ms)
 
 Brief analysis of Locust results: The two initial failures occurred due to no {order_id} being found in the orders DB table. This is correct behavior because the test script stores created orders in a list. At the beginning of the stress test, no orders are created. Thus, a particular request can return a 404 code. Overall, the application exhibited strong stability with only 2 errors out of 3871 requests. In terms of performance, the application exhibited solid metrics. The P95 and P99 metrics were both under 50 ms in the aggregate. Thus, the application exhibits good scalability under load. Peak latency experienced could be attributed to the small Task size used (0.5 vCPU and 2GiB memory) and the small RDS Class used (db.t4g.micro).
 
-Steps to deploy to AWS:
+AWS configuration details:
+
+ECS task definition added to repository as "cs218-api-task-4.json".
+
+ALB target group health check configuration: The ALB Target Group health check monitors the /health endpoint. An additional container health check is configured.
+
+<img width="1651" height="263" alt="image" src="https://github.com/user-attachments/assets/25aff2e7-742b-46f2-83e4-ab2c2b5ff9a2" />
+
+<img width="1593" height="284" alt="image" src="https://github.com/user-attachments/assets/8787ee6b-8aa9-4edd-9c6b-7fa22c1bea97" />
+
+Secrets injection: The "database_url" and the "db_password" variables are stored via AWS SSM Parameter Store and referenced by the container at runtime. Both variables are stored as a SecureString for security. The database host, user, password, and dbname are environment driven - as directed in the assignment instructions. 
+
+<img width="1917" height="547" alt="image" src="https://github.com/user-attachments/assets/6efae1ea-97d3-4c00-9f78-56961764e355" />
